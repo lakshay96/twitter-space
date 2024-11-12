@@ -1,15 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function SearchForm() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState(null);
   const [tweets, setTweets] = useState([]);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure this logic runs only on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setStatus('Searching...');
 
     const response = await fetch('/api/search', {
@@ -30,6 +35,11 @@ function SearchForm() {
     }
   };
 
+  // Prevent rendering client-specific content during SSR
+  if (!isClient) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -44,8 +54,8 @@ function SearchForm() {
 
       {status && <p>Status: {status}</p>}
       
-      <div>
-        {tweets.length > 0 && (
+      {tweets.length > 0 && (
+        <div>
           <ul>
             {tweets.map((tweet, index) => (
               <li key={index}>
@@ -55,8 +65,8 @@ function SearchForm() {
               </li>
             ))}
           </ul>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
