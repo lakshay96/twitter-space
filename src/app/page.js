@@ -1,37 +1,59 @@
 'use client';
 
-import { useState } from 'react';
+// /src/components/SearchForm.js
 
-export default function Home() {
+import React, { useState } from 'react';
+
+const SearchForm = () => {
   const [query, setQuery] = useState('');
-  const [status, setStatus] = useState(null);
-  const [results, setResults] = useState(null);
+  const [status, setStatus] = useState('');
+  const [results, setResults] = useState([]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const res = await fetch('/api/search', {
+  const handleSearch = async () => {
+    setStatus('Searching...');
+    const response = await fetch('/api/search', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ query }),
-      headers: { 'Content-Type': 'application/json' },
     });
-    const data = await res.json();
-    setStatus(data.status);
-    setResults(data.results);
+    const data = await response.json();
+
+    if (response.ok) {
+      setResults(data.data);
+      setStatus('Completed');
+    } else {
+      setStatus('Failed');
+      alert(data.message || 'Error occurred');
+    }
   };
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Enter Twitter Query"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button type="submit">Submit</button>
-      </form>
-      {status && <p>Status: {status}</p>}
-      {results && <div>{results.map((r) => <p key={r.id}>{r.text}</p>)}</div>}
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Enter Twitter search query"
+      />
+      <button onClick={handleSearch}>Search</button>
+      <div>Status: {status}</div>
+      {results.length > 0 && (
+        <div>
+          <h2>Results:</h2>
+          <ul>
+            {results.map((tweet, index) => (
+              <li key={index}>
+                <strong>{tweet.username}</strong>: {tweet.text} <br />
+                <small>{tweet.time}</small>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default SearchForm;
